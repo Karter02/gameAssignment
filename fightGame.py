@@ -1,15 +1,15 @@
-import pygame
-pygame.init()
+import pygame #This imports pygame into the code
+pygame.init() #intitiates pygame
 
-screenheight = 480
-screenwidth = 500
+screenheight = 480 #sets the screen height
+screenwidth = 500 #sets the screen width
 
-clock = pygame.time.Clock()
+clock = pygame.time.Clock() 
 score = 0
 
-win = pygame.display.set_mode((500,480))
+win = pygame.display.set_mode((500,480)) #displays the screen height and width
 
-walkRight = [pygame.image.load('resources/character/R1.png'),
+walkRight = [pygame.image.load('resources/character/R1.png'), #all of this is the character's images 
     pygame.image.load('resources/character/R2.png'),
     pygame.image.load('resources/character/R3.png'),
     pygame.image.load('resources/character/R4.png'),
@@ -27,11 +27,11 @@ walkLeft = [pygame.image.load('resources/character/L1.png'),
        pygame.image.load('resources/character/L7.png'),
        pygame.image.load('resources/character/L8.png'),
        pygame.image.load('resources/character/L9.png')]
-bg = pygame.image.load('resources/bg.jpg')
-char = pygame.image.load('resources/character/standing.png')
+bg = pygame.image.load('resources/bg.jpg') #this is the background
+char = pygame.image.load('resources/character/standing.png') #the character standing
 
-class player(object):
-     def __init__(self, x, y, width, height):
+class player(object): #this is makikng the player class
+     def __init__(self, x, y, width, height): #this initiates the class player
          self.x = x
          self.y = y
          self.width = width
@@ -45,7 +45,7 @@ class player(object):
          self.standing = True
          self.hitbox = (self.x + 17, self.y + 11, 29, 52)
 
-     def draw(self,win):
+     def draw(self,win): #defines the characters walking pattern
           if self.walkCount + 1 >=27:
                self.walkCount = 0
 
@@ -64,30 +64,24 @@ class player(object):
                     self.hitbox = (self.x + 17, self.y + 11, 29, 52)
        
                
-class enemy(object): 
-    walkRight = [pygame.image.load('resources/enemy/R1E.png'),
-        pygame.image.load('resources/enemy/R2E.png'),
-        pygame.image.load('resources/enemy/R3E.png'),
-        pygame.image.load('resources/enemy/R4E.png'),
-        pygame.image.load('resources/enemy/R5E.png'),
-        pygame.image.load('resources/enemy/R6E.png'),
-        pygame.image.load('resources/enemy/R7E.png'),
-        pygame.image.load('resources/enemy/R8E.png'),
-        pygame.image.load('resources/enemy/R9E.png'),
-        pygame.image.load('resources/enemy/R10E.png'),
-        pygame.image.load('resources/enemy/R11E.png')]
-    walkLeft = [pygame.image.load('resources/enemy/L1E.png'),
-        pygame.image.load('resources/enemy/L2E.png'),
-        pygame.image.load('resources/enemy/L3E.png'),
-        pygame.image.load('resources/enemy/L4E.png'),
-        pygame.image.load('resources/enemy/L5E.png'),
-        pygame.image.load('resources/enemy/L6E.png'),
-        pygame.image.load('resources/enemy/L7E.png'),
-        pygame.image.load('resources/enemy/L8E.png'),
-        pygame.image.load('resources/enemy/L9E.png'),
-        pygame.image.load('resources/enemy/L10E.png'),
-        pygame.image.load('resources/enemy/L11E.png')]
-    def __init__(self, x, y, width, height, end):
+class enemy(object): #makes the class enemy
+    i = 0 #defines i
+    numberOfImages = 11 
+    walkLeft = []
+    walkRight = []
+    directoryName = 'enemy'
+
+    
+    while(i < numberOfImages):
+         i += 1
+         walkLeftElement = "resources/" + directoryName + "/L" + str(i) +  ".png"
+         walkRightElement = "resources/" + directoryName + "/R" + str(i) +  ".png"
+         walkLeft.append(pygame.image.load(walkLeftElement))
+         walkRight.append(pygame.image.load(walkRightElement))
+               
+        
+  
+    def __init__(self, x, y, width, height, end, numberOfImages, directoryName): #intitiiates the class player
          self.x = x
          self.y = y
          self.width = width
@@ -99,6 +93,70 @@ class enemy(object):
          self.hitbox = (self.x + 17, self.y + 2, 31, 57)
          self.health = 10
          self.visible = True
+         self.numberOfImages = numberOfImages
+
+    def draw(self,win): #definies the enemy's walk pattern
+        self.move()
+        if self.visible:
+            if self.walkCount + 1 >= numberOfImages * 3:
+                self.walkCount = 0
+
+            if self.vel > 0:
+                win.blit(self.walkRight[self.walkCount//3], (self.x, self.y))
+                self.walkCount += 1
+            else:
+                win.blit(self.walkLeft[self.walkCount//3], (self.x, self.y))
+                self.walkCount += 1
+
+            pygame.draw.rect(win,(255,0,0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10)) #all of this makes the hitbox for the enemy
+            pygame.draw.rect(win,(0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.health)), 10))
+            self.hitbox = (self.x + 17, self.y + 2, 31, 57)
+              
+
+    def move(self): #defining the way the enemy moves
+        if self.vel > 0:
+            if self.x + self.vel < self.path[1]:
+                self.x += self.vel
+            else:
+                self.vel = self.vel * -1
+                self.walkCount = 0
+        else:
+            if self.x - self.vel > self.path[0]:
+                self.x += self.vel
+            else:
+                self.vel = self.vel * -1
+                self.walkCount = 0
+
+    def hit(self):
+        if self.health > 0:
+            self.health -= 1
+        else:
+            self.visible = False
+            self.hitbox = (self.x + 0, self.y + 0, 0, 0)
+
+class enemy2(object):
+  
+    def __init__(self, x, y, width, height, end, numberOfImages, directoryName):
+         self.x = x
+         self.y = y
+         self.width = width
+         self.height = height
+         self.end = end
+         self.path = [self.x, self.end]
+         self.walkCount =  0
+         self.vel = 3
+         i = 0
+         numberOfImages = 11
+         self.walkLeft = []
+         self.walkRight = []
+         directoryName = 'enemy2'
+         while(i < numberOfImages):
+              i += 1
+              walkLeftElement = "resources/" + directoryName + "/L" + str(i) + ".png"
+              walkRightElement = "resources/" + directoryName + "/R" + str(i) +  ".png"
+              walkLeft.append(pygame.image.load(walkLeftElement))
+              walkRight.append(pygame.image.load(walkRightElement))
+         
 
     def draw(self,win):
         self.move()
@@ -137,12 +195,14 @@ class enemy(object):
             self.health -= 1
         else:
             self.visible = False
+            self.hitbox = (self.x + 0, self.y + 0, 0, 0)
 
-class projectile(object):
+class projectile(object): #this initiates the projectile class
    def __init__(self,x,y,radius,color,facing):
      self.x = x
      self.y = y
      self.radius = radius
+     
      self.facing = facing
      self.color = color
      self.vel = 8 * facing
@@ -151,10 +211,11 @@ class projectile(object):
      pygame.draw.circle(win, self.color, (self.x, self.y), self.radius)
 
 #print("hello game")
-def redrawGameWindow():
+def redrawGameWindow(): #this defines the game window
     #global walkCount
-    win.blit(bg,(0,0)) 
+    win.blit(bg,(0,0))
     man.draw(win)
+    mike.draw(win)
     goblin.draw(win)
     for bullet in bullets:
        bullet.draw(win)
@@ -167,7 +228,8 @@ def redrawGameWindow():
 #Main Loop
 font = pygame.font.SysFont("comicsans", 30, True)
 man = player(300, 410, 64, 64)
-goblin = enemy(100,410,64,64,450)
+mike = enemy2(100, 410, 64, 64, 450, 11, 'enemy')
+goblin = enemy(100, 410, 64, 64, 450, 11, 'enemy')
 shootLoop = 0
 run = True
 bullets = []
